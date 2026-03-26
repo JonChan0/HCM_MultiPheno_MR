@@ -14,3 +14,5 @@
 3_prediction/2_scripts/archive/*
 1_MR/3_output/*
 3_prediction/3_output/*
+*.exe
+**/archive/**
