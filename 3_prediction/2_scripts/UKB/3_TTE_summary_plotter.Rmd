@@ -14,6 +14,8 @@ library(survival)
 library(broom)
 library(patchwork)
 rm(list=ls())
+
+theme_set(theme_classic(base_size = 14))
 ```
 
 ## Import 
@@ -251,7 +253,7 @@ This performs inference on the trained weights from the Cox regression model (un
 First, I import in the coefs from the unregularised Cox regression across all 3 features sets by importing the .rds from the coxph() in R on UKB-RAP
 
 ```{r}
-output_folder <- '3_prediction/3_output/2_TTE_Analysis/UKB/'
+output_folder <- '3_prediction/3_output/2_TTE_Analysis/UKB/inference'
 cox_filenames <- list.files(output_folder, pattern = '\\.rds')
 model_names <- str_match(cox_filenames, '([^\\.]+)\\.rds')[,2]
 
@@ -285,7 +287,7 @@ palette_vector2 <- c(
 )
 
 plot_df <- plot_df %>%
-  mutate(term = fct_reorder(term, desc(p.value)))
+  mutate(term = fct_reorder(term, estimate)) # Reorder the terms based on the estimate values for better visualization in the forest plot
 
 # 2. Create the ordered color vector based on the factor levels of our updated data frame.
 #    The order of `axis_colors` will now perfectly match the order of labels on the plot.
@@ -293,10 +295,11 @@ axis_colors <- palette_vector2[levels(plot_df$term)]
 
 
 # --- Build the Plot (now simplified) ---
-# We no longer need to mutate/reorder inside the ggplot call.
 forest_plot <- ggplot(plot_df, aes(x = estimate, y = term)) +
   geom_vline(xintercept = 1, linetype = 'dashed', alpha = 0.5) +
-  geom_point(size = 2, shape = 23, aes(fill = model_type)) +
+  geom_point(size = 2, shape = 23, fill='black'
+  #, aes(fill = model_type)
+  ) +
   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.5, linewidth = 0.5) +
   scale_fill_manual(
     name = 'Predictor Group',
@@ -317,7 +320,7 @@ forest_plot <- ggplot(plot_df, aes(x = estimate, y = term)) +
   )
 
 print(forest_plot)
-ggsave(str_c(output_folder, 'unreg_cox_allpreds_forestplot.png'), dpi=600, height = 6, width=12)
+ggsave(str_c(output_folder, 'unreg_cox_allpreds_forestplot.png'), dpi=600, height = 6, width=9)
 ```
 
 ### Cox Assumptions

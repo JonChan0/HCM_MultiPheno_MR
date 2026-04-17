@@ -34,8 +34,10 @@ sensitivity_or_results_importer <- function(folder){
   } else{
       sensitivity_results <- sensitivity_results %>%
     select(-id.exposure, -id.outcome) %>%
-  mutate(exposure = ifelse(exposure=='bmi', 'BMI', exposure),
-         outcome = ifelse(outcome=='bmi', 'BMI', outcome)) %>%
+  mutate(exposure = case_when(exposure=='bmi' ~ 'BMI', 
+                              exposure == 'HCM_HCMRless' ~ 'HCM',
+                              TRUE ~ exposure),
+         outcome = case_when(outcome=='bmi' ~ 'BMI', TRUE ~ outcome)) %>%
     mutate(exposure_outcome = str_c(exposure, outcome, sep=' -> '))
   
   return(sensitivity_results)
@@ -45,6 +47,13 @@ sensitivity_or_results_importer <- function(folder){
 
 mr_results <- map(str_c(results_folder, analyses), ~sensitivity_or_results_importer(.)) %>% bind_rows() 
 write_tsv(mr_results, str_c(results_folder, 'summary_MR_results_oddsratio.tsv'))
+```
+
+```{r}
+#Also do the same for the subgroup/HF analyses
+hf_subgroup_analyses <- list.dirs(str_c(results_folder,'subgroup/HF/'), recursive=F, full.names=F)
+hf_subgroup_mr_results <- map(str_c(results_folder,'subgroup/HF/', hf_subgroup_analyses), ~sensitivity_or_results_importer(.)) %>% bind_rows() 
+write_tsv(hf_subgroup_mr_results, str_c(results_folder,'subgroup/HF/summary_MR_results_oddsratio.tsv'))
 ```
 
 Define the grouping of the phenotypes into different parameter groups here.
@@ -69,6 +78,7 @@ label_tb <- as_tibble(c('HCM',crf_vars,fibrosis_vars,LV_diastolic_vars, pp_vars)
   select(phenotype = value) %>%
   mutate(label = case_when(
     phenotype %in% c(crf_vars) ~ phenotype,
+    phenotype == 'HCM_HCMRless' ~ 'HCM', #This is the same as HCM just with the 19 GWS SNPs from the HCMR-less GWAS meta-analysis
     phenotype == 'T1time' ~ 'T1_time',
     phenotype == 'maxLAVi' ~ 'MaxLAVi',
     phenotype == 'hcmr2_ecvfwhole' ~ 'ECVF',
