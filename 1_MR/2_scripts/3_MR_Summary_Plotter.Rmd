@@ -24,7 +24,7 @@ The 32 GWS SNPs from Tadros et al, 2025 are used as the instruments for the HCM 
 ```{r import}
 results_folder <- '1_MR/3_output/2_MR/'
 analyses <- list.dirs(results_folder, recursive=F, full.names=F)
-analyses <- analyses[!str_detect(analyses, 'archive|subgroup|DCM|sensitivity')]
+analyses <- analyses[!str_detect(analyses, 'archive|subgroup|DCM|sensitivity|ANGPT2|LTBP2')]
 
 sensitivity_or_results_importer <- function(folder){
   sensitivity_results <- read.table(str_c(folder, '/',str_match(folder,'\\/([^\\/]+)_to_')[,2], '_mr_results_sensitivity_oddsratio.tsv'), header=T)
@@ -902,6 +902,26 @@ ggsave('1_MR/3_output/3_summary_plots/sig_MR_forestplot_subgroup_hcmoutcome_OR.p
 
 
 ## Misc.
+
+## ANGPT2/LTBP2 for Thesis
+
+This does summary of the MR using 32 non-MTAG SNPs for ANGPT2 and LTBP2 with HCM to maintain methodological consistency with this MultiPheno MR work in the thesis.
+
+```{r}
+results_folder <- '1_MR/3_output/2_MR/'
+analyses <- list.dirs(results_folder, recursive=F, full.names=F)
+analyses <- analyses[str_detect(analyses, 'ANGPT2|LTBP2')]
+
+mr_results <- map(str_c(results_folder, analyses), ~sensitivity_or_results_importer(.)) %>% bind_rows() 
+write_tsv(mr_results, str_c(results_folder, 'summary_MR_results_oddsratio_ANGPT2_LTBP2.tsv'))
+```
+
+```{r}
+instruments <- map(str_c(results_folder, analyses,'/',analyses,'_instrument_details.tsv'), ~read_tsv(.))
+names(instruments) <- analyses
+instruments_tb <- bind_rows(instruments, .id = "exposure_outcome")
+write_tsv(instruments_tb, str_c(results_folder, 'ANGPT2_LTBP2_MR_instruments.tsv'))
+```
 
 ### Double-Check Separate Instruments
 
